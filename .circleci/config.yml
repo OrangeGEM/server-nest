@@ -1,0 +1,27 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:16.10.0
+    steps:
+      - checkout
+      - run: 
+          name: "Install dependencies"
+          command: |
+            npm i;
+      - run: 
+          name: "Build app"
+          command: |
+            env > .env;
+            npm run build;
+      - sonarcloud/scan
+
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.1
+
+workflows:
+  main:
+    jobs:
+      - build:
+          context: SonarCloud
