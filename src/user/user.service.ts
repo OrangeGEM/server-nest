@@ -8,6 +8,8 @@ import { JWT_SECRET } from "@app/config";
 import { UserResponseInterface } from "./types/userResponse.interface";
 
 import { compare } from 'bcrypt';
+import { LoginUserDto } from "./dto/loginUser.dto";
+import { UpdateUserDto } from "./dto/updateUser.dto";
 
 @Injectable()
 export class UserService {
@@ -32,19 +34,34 @@ export class UserService {
     }
 
     //Login user
-    async loginUser(createUserDto: CreateUserDto): Promise<any> {
-        const user = await this.userRepository.findOne({
-            email: createUserDto.email,
-        })
+    async loginUser(loginUserDto: LoginUserDto): Promise<UserEntity> {
+        const user = await this.userRepository.findOne(
+            { email: loginUserDto.email, },
+            { select: ['id', 'email', 'password'] }
+        )
         if(!user) {
-            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+            throw new HttpException('Credentials are not valid', HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
-        const isPassEquels = await compare(createUserDto.password, user.password);
+        const isPassEquels = await compare(loginUserDto.password, user.password);
         if(!isPassEquels) {
-            throw new HttpException('Password uncorrect', HttpStatus.BAD_REQUEST);
+            throw new HttpException('Credentials are not valid', HttpStatus.UNPROCESSABLE_ENTITY);
         }
+        delete user.password;
+
         return user;
+    }
+
+    //Update user
+    async updateUser(updateUserDto: UpdateUserDto, userId: number): Promise<UserEntity> {
+        const user = await this.findById(userId)
+        Object.assign(user, updateUserDto);
+        return await this.userRepository.save(user);
+    }
+
+
+    findById(id: number): Promise<UserEntity> {
+        return this.userRepository.findOne(id);
     }
 
     buildUserResponse(user: UserEntity): UserResponseInterface {
