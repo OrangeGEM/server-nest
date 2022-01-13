@@ -13,7 +13,7 @@ async function bootstrap() {
     .setTitle('SmartQ API')
     .setDescription('The SmartQ API description')
     .setVersion('1.0')
-    .addTag('user')
+    .addTag('User')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
