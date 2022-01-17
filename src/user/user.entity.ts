@@ -43,7 +43,6 @@ export class UserEntity {
     updatedAt: Date;
 
     @BeforeInsert()
-    @BeforeUpdate()
     async hashPassword() {
         this.password = await hash(this.password, 12);
     }

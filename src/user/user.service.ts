@@ -7,12 +7,15 @@ import { sign, decode} from 'jsonwebtoken';
 import { JWT_SECRET } from "@app/config";
 import { UserResponseInterface } from "./types/userResponse.interface";
 
-import { compare } from 'bcrypt';
+import { compare, hash } from 'bcrypt';
 import { LoginUserDto } from "./dto/loginUser.dto";
 import { UpdateUserDto } from "./dto/updateUser.dto";
 import { MailService } from "@app/utils/mail/mail.service";
 import { ActivateUserDto } from "./dto/activateUser.dto";
-import { RefreshPasswordUserDto } from "./dto/refreshPasswordUser.dto";
+import { UpdatePasswordAuthUserDto } from "./dto/updatePasswordAuthUser";
+import { UpdatePasswordNonAuthLinkDto } from "./dto/updatePasswordNonAuthLink";
+import { UpdatePasswordNonAuthUserDto } from "./dto/updatePasswordNonAuthUser";
+import { PassThrough } from "stream";
 
 @Injectable()
 export class UserService {
@@ -59,7 +62,7 @@ export class UserService {
 
     //Update user
     async updateUser(updateUserDto: UpdateUserDto, userId: number): Promise<UserEntity> {
-        const user = await this.findById(userId)
+        const user = await this.findById(userId);
         Object.assign(user, updateUserDto);
         return await this.userRepository.save(user);
     }
@@ -77,20 +80,43 @@ export class UserService {
         return await this.userRepository.save(user);
     }
 
-    async updateUserPassword(refreshPasswordUserDto: RefreshPasswordUserDto, userId: number): Promise<any> {
+    async updateUserPassword(updatePasswordAuthUserDto: UpdatePasswordAuthUserDto, userId: number): Promise<UserEntity> {
         const user = await this.findById(userId, {select: ['id', 'password']});
 
-        if(!await compare(refreshPasswordUserDto.oldPassword, user.password)) {
+        if(!await compare(updatePasswordAuthUserDto.oldPassword, user.password)) {
             throw new HttpException('Password incorrected', HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
-        user.password = refreshPasswordUserDto.newPassword;
-        return await this.userRepository.update(user.id, user);
+        user.password = await hash(updatePasswordAuthUserDto.newPassword, 12);
+        return await this.userRepository.save(user);
     }
 
+    async sendUpdatePasswordLink(updatePasswordNonAuthLinkDto: UpdatePasswordNonAuthLinkDto) : Promise<UserEntity> {
+        const user = await this.findByParams(updatePasswordNonAuthLinkDto)
+        if(!user) {
+            throw new HttpException('Email are not found', HttpStatus.NOT_FOUND);
+        }
+        return user;
+    }
+
+    async updateUserPasswordNonAuth(updatePasswordNonAuthUserDto: UpdatePasswordNonAuthUserDto): Promise<UserEntity> {
+        const decodedJwt = await this.decodeJwt(updatePasswordNonAuthUserDto.token);
+        const user = await this.findById(decode.id);
+
+        if(!user) {
+            throw new HttpException('Token not valid', HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        user.password = await hash(updatePasswordNonAuthUserDto.password, 12);
+        return await this.userRepository.save(user);
+    }
 
     findById(id: number, options?): Promise<UserEntity> {
         return this.userRepository.findOne(id, options);
+    }
+
+    findByParams(params?): Promise<UserEntity> {
+        return this.userRepository.findOne(params)
     }
 
     buildUserResponse(user: UserEntity): UserResponseInterface {

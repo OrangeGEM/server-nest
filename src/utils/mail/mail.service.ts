@@ -20,11 +20,29 @@ export class MailService {
         console.log(`Mail send to ${user.email}`);
     }
 
-    private async generateActivatedLink(user: UserEntity) : Promise<string> {
-        const uniquePart = sign({
+    public async sendUpdatePasswordLink(user: UserEntity) : Promise<void> {
+        this.mailerService.sendMail({
+            to: user.email,
+            from: 'Orange-temp@yandex.ru',
+            subject: 'Refresh password',
+            text: 'Refresh passwordt',
+            html: `<a> Refresh password link: ${await this.generateRefreshPasswordLink(user)} </a>`
+        })
+        console.log(`Mail send to ${user.email}`);
+    }
+
+    private async generateActivatedLink(user: UserEntity): Promise<string> {
+        return `http://localhost:3000/activate/${this.generateUniquePart(user)}`
+    }
+
+    private async generateRefreshPasswordLink(user: UserEntity): Promise<string> {
+        return `http://localhost:3000/update-nonauth-password/${this.generateUniquePart(user)}`
+    }
+
+    private generateUniquePart(user: UserEntity): string {
+        return sign({
             id: user.id,
             email: user.email
         }, JWT_SECRET);
-        return `http://localhost:3000/activate/${uniquePart}`
     }
 }

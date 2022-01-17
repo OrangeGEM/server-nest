@@ -9,6 +9,4 @@ export class UpdateUserDto {
     readonly image: string;
     @ApiProperty({required: false})
     readonly lang: string
-    @ApiProperty({required: false})
-    readonly isActive: boolean
 }

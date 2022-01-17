@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class ActivateUserDto {
+export class UpdatePasswordNonAuthLinkDto {
     @ApiProperty({required: true})
-    readonly token: string
+    readonly email: string;
 }
