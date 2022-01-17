@@ -1,15 +1,18 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpCode, HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { getRepository, Repository } from "typeorm";
 import { CreateUserDto } from "./dto/createUser.dto";
 import { UserEntity } from "./user.entity";
-import { sign } from 'jsonwebtoken';
+import { sign, decode} from 'jsonwebtoken';
 import { JWT_SECRET } from "@app/config";
 import { UserResponseInterface } from "./types/userResponse.interface";
 
 import { compare } from 'bcrypt';
 import { LoginUserDto } from "./dto/loginUser.dto";
 import { UpdateUserDto } from "./dto/updateUser.dto";
+import { MailService } from "@app/utils/mail/mail.service";
+import { ActivateUserDto } from "./dto/activateUser.dto";
+import { RefreshPasswordUserDto } from "./dto/refreshPasswordUser.dto";
 
 @Injectable()
 export class UserService {
@@ -30,6 +33,8 @@ export class UserService {
         const newUser = new UserEntity();
         Object.assign(newUser, createUserDto);
         console.log('newUser: ', newUser);
+
+
         return await this.userRepository.save(newUser);
     }
 
@@ -59,9 +64,33 @@ export class UserService {
         return await this.userRepository.save(user);
     }
 
+    //Activate user email
+    async activateUser(activateUserDto: ActivateUserDto): Promise<UserEntity> {
+        const decodedJwt = await this.decodeJwt(activateUserDto.token);
+        const user = await this.findById(decodedJwt.id);
+        
+        if(user.isActive) {
+            throw new HttpException('Email already activate', HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+        user.isActive = true;
 
-    findById(id: number): Promise<UserEntity> {
-        return this.userRepository.findOne(id);
+        return await this.userRepository.save(user);
+    }
+
+    async updateUserPassword(refreshPasswordUserDto: RefreshPasswordUserDto, userId: number): Promise<any> {
+        const user = await this.findById(userId, {select: ['id', 'password']});
+
+        if(!await compare(refreshPasswordUserDto.oldPassword, user.password)) {
+            throw new HttpException('Password incorrected', HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        user.password = refreshPasswordUserDto.newPassword;
+        return await this.userRepository.update(user.id, user);
+    }
+
+
+    findById(id: number, options?): Promise<UserEntity> {
+        return this.userRepository.findOne(id, options);
     }
 
     buildUserResponse(user: UserEntity): UserResponseInterface {
@@ -73,11 +102,15 @@ export class UserService {
         }
     }
 
-    generateJwt(user: UserEntity): string {
+    public generateJwt(user: UserEntity): string {
         return sign({
             id: user.id,
             email: user.email
         }, JWT_SECRET);
+    }
+
+    public decodeJwt(token: string): any {
+        return decode(token);
     }
 
 }

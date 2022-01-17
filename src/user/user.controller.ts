@@ -11,10 +11,16 @@ import { User } from "./decorators/user.decorator";
 import { AuthGuard } from "./guards/auth.guard";
 import { UpdateUserDto } from "./dto/updateUser.dto";
 import { ApiBody, ApiHeader, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { MailService } from "@app/utils/mail/mail.service";
+import { ActivateUserDto } from "./dto/activateUser.dto";
+import { RefreshPasswordUserDto } from "./dto/refreshPasswordUser.dto";
 
 @Controller('users')
 export class UserController {
-    constructor(private readonly userService: UserService) {}
+    constructor(
+        private readonly userService: UserService, 
+        private readonly mailService: MailService
+    ) {}
 
     @Post('register')
     @UsePipes(new ValidationPipe())
@@ -25,6 +31,7 @@ export class UserController {
     @ApiResponse({ status: 422, description:"Email are taken" })
     async createUser(@Body('user') createUserDto: CreateUserDto): Promise<UserResponseInterface> {
         const user = await this.userService.createUser(createUserDto);
+        await this.mailService.sendActivatedLink(user);
         return this.userService.buildUserResponse(user);
     }
 
@@ -61,8 +68,26 @@ export class UserController {
     async updateUser(
         @Body('params') updateUserDto: UpdateUserDto, 
         @User('id') userId: number,
-    ): Promise<UserResponseInterface> {//Any delete
+    ): Promise<UserResponseInterface> {
         const user = await this.userService.updateUser(updateUserDto, userId)
         return this.userService.buildUserResponse(user)
+    }
+
+    @Put('activate')
+    async activateUser(
+        @Body() activateUserDto: ActivateUserDto
+    ): Promise<UserResponseInterface> {
+        const user = await this.userService.activateUser(activateUserDto)
+        return this.userService.buildUserResponse(user);
+    }
+
+    @Put('refresh')
+    @UseGuards(AuthGuard)
+    async refreshPasswordUser(
+        @Body() refreshPasswordUserDto: RefreshPasswordUserDto,
+        @User('id') userId: number
+    ): Promise<UserResponseInterface> {
+        const user = await this.userService.updateUserPassword(refreshPasswordUserDto, userId);
+        return this.userService.buildUserResponse(user);
     }
 } 

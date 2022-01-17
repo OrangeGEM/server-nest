@@ -3,12 +3,21 @@ import { AppController } from '@app/app.controller';
 import { AppService } from '@app/app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
+import { AuthMiddleware } from './middlewares/auth.middleware';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
+import { MailModule } from './utils/mail/mail.module';
 
 import ormconfig from '@app/ormconfig';
-import { AuthMiddleware } from './middlewares/auth.middleware';
+
 
 @Module({
-  imports: [TypeOrmModule.forRoot(ormconfig), UserModule],
+  imports: [
+    TypeOrmModule.forRoot(ormconfig),
+    UserModule,
+    MailModule
+  ],
+
   controllers: [AppController],
   providers: [AppService],
 })

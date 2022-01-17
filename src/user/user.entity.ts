@@ -1,4 +1,4 @@
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { hash } from 'bcrypt';
 import { ApiProperty } from "@nestjs/swagger";
 
@@ -33,16 +33,24 @@ export class UserEntity {
     lang: string
 
     @ApiProperty()
-    @Column({default: true})
+    @Column({default: false})
     isActive: boolean
 
-    @ApiProperty()
-    @Column({default: ''})
-    activatedLink: string
+    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt: Date;
 
+    @Column({ type: 'timestamp', default: () => "CURRENT_TIMESTAMP" })
+    updatedAt: Date;
 
     @BeforeInsert()
+    @BeforeUpdate()
     async hashPassword() {
         this.password = await hash(this.password, 12);
     }
+
+    @BeforeUpdate()
+    async updateTimestamp() {
+        this.updatedAt = new Date();
+    }
+
 }
