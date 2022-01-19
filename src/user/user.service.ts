@@ -1,21 +1,18 @@
-import { HttpCode, HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { getRepository, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import { CreateUserDto } from "./dto/createUser.dto";
 import { UserEntity } from "./user.entity";
 import { sign, decode} from 'jsonwebtoken';
 import { JWT_SECRET } from "@app/config";
 import { UserResponseInterface } from "./types/userResponse.interface";
-
 import { compare, hash } from 'bcrypt';
 import { LoginUserDto } from "./dto/loginUser.dto";
 import { UpdateUserDto } from "./dto/updateUser.dto";
-import { MailService } from "@app/utils/mail/mail.service";
 import { ActivateUserDto } from "./dto/activateUser.dto";
 import { UpdatePasswordAuthUserDto } from "./dto/updatePasswordAuthUser";
 import { UpdatePasswordNonAuthLinkDto } from "./dto/updatePasswordNonAuthLink";
 import { UpdatePasswordNonAuthUserDto } from "./dto/updatePasswordNonAuthUser";
-import { PassThrough } from "stream";
 
 @Injectable()
 export class UserService {
@@ -35,9 +32,7 @@ export class UserService {
 
         const newUser = new UserEntity();
         Object.assign(newUser, createUserDto);
-        console.log('newUser: ', newUser);
-
-
+        
         return await this.userRepository.save(newUser);
     }
 

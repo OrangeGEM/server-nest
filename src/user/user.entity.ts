@@ -1,6 +1,7 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { hash } from 'bcrypt';
 import { ApiProperty } from "@nestjs/swagger";
+import { QueueEntity } from "@app/queue/queue.entity";
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -41,6 +42,9 @@ export class UserEntity {
 
     @Column({ type: 'timestamp', default: () => "CURRENT_TIMESTAMP" })
     updatedAt: Date;
+
+    @OneToMany(() => QueueEntity, queue => queue.owner)
+    queues: QueueEntity[]; 
 
     @BeforeInsert()
     async hashPassword() {
