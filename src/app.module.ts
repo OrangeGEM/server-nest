@@ -9,13 +9,15 @@ import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { MailModule } from './utils/mail/mail.module';
 
 import ormconfig from '@app/ormconfig';
+import { QueueModule } from './queue/queue.module';
 
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(ormconfig),
     UserModule,
-    MailModule
+    MailModule,
+    QueueModule
   ],
 
   controllers: [AppController],
