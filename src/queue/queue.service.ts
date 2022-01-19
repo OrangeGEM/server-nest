@@ -33,6 +33,14 @@ export class QueueService {
 
     //Edit queue
     async editQueue(currentUser: UserEntity, editQueueDto: EditQueueDto): Promise<QueueEntity> {
+        const queueByKeyword = await this.findByParams({
+            keyword: editQueueDto.keyword
+        })
+
+        if(queueByKeyword) {
+            throw new HttpException('Keyword are taken', HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
         const queue = await this.findById(editQueueDto.id);
         Object.assign(queue, editQueueDto);
 
@@ -52,7 +60,8 @@ export class QueueService {
 
     async getQueues(currentUser: UserEntity): Promise<QueueEntity[]> {
         const queues = await this.queueRepository.find({
-            owner: currentUser
+            owner: currentUser,
+            isActive: true,
         })
         return queues;
     }

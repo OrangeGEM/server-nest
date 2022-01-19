@@ -5,6 +5,7 @@ import { Body, Controller, Delete, Get, Post, Put, UseGuards } from "@nestjs/com
 import { CreateQueueDto } from "./dto/createQueue.dto";
 import { DeleteQueueDto } from "./dto/deleteQueue.dto";
 import { EditQueueDto } from "./dto/editQueue.dto";
+import { QueueEntity } from "./queue.entity";
 import { QueueService } from "./queue.service";
 
 @Controller('queue')
@@ -18,8 +19,8 @@ export class QueueController {
     async createQueue(
         @User() currentUser: UserEntity,
         @Body() createQueueDto: CreateQueueDto
-    ): Promise<any> {
-        const queue = this.queueService.createQueue(currentUser, createQueueDto);
+    ): Promise<QueueEntity> {
+        const queue = await this.queueService.createQueue(currentUser, createQueueDto);
         return queue;
     }
 
@@ -28,8 +29,8 @@ export class QueueController {
     async editQueue(
         @User() currentUser: UserEntity,
         @Body() editQueueDto: EditQueueDto
-    ): Promise<any> {
-        const queue = this.queueService.editQueue(currentUser, editQueueDto);
+    ): Promise<QueueEntity> {
+        const queue = await this.queueService.editQueue(currentUser, editQueueDto);
         return queue;
     }
 
@@ -38,8 +39,8 @@ export class QueueController {
     async deleteQueue(
         @User() currentUser: UserEntity,
         @Body() deleteQueueDto: DeleteQueueDto
-    ): Promise<any> {
-        const queue = this.queueService.deleteQueue(currentUser, deleteQueueDto);
+    ): Promise<QueueEntity> {
+        const queue = await this.queueService.deleteQueue(currentUser, deleteQueueDto);
         return queue;
     }
 
@@ -47,8 +48,8 @@ export class QueueController {
     @UseGuards(AuthGuard)
     async getQueues(
         @User() currentUser: UserEntity,
-    ): Promise<any> {
-        const queues = this.queueService.getQueues(currentUser);
+    ): Promise<QueueEntity[]> {
+        const queues = await this.queueService.getQueues(currentUser);
         return queues;
     }
 }
