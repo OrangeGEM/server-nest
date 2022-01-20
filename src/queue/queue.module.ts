@@ -9,6 +9,5 @@ import { QueueService } from "./queue.service";
     controllers: [QueueController],
     providers: [QueueService],
     imports: [TypeOrmModule.forFeature([QueueEntity])],
-    exports: [QueueService],
 })
 export class QueueModule {}
