@@ -1,7 +1,8 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { hash } from 'bcrypt';
 import { ApiProperty } from "@nestjs/swagger";
 import { UserEntity } from "@app/user/user.entity";
+import { MemberEntity } from "@app/member/member.entity";
 
 @Entity({ name: 'queues' })
 export class QueueEntity {
@@ -21,6 +22,9 @@ export class QueueEntity {
     @Column()
     description: string;
 
+    @Column({default: 0})
+    ticketNumber: number;
+
     @ApiProperty()
     @Column()
     date: Date
@@ -37,6 +41,9 @@ export class QueueEntity {
 
     @ManyToOne(() => UserEntity, user => user.queues)
     owner: UserEntity;
+
+    @OneToMany(() => MemberEntity, member => member.ownQueue)
+    members: MemberEntity[];
 
     @BeforeUpdate()
     async updateTimestamp() {
