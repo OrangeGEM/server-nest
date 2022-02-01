@@ -5,7 +5,7 @@ const config: ConnectionOptions = {
     host: 'localhost',
     port: 5432,
     username: 'smartq',
-    password: 'Vetel123123',
+    password: 'smartq',
     database: 'smartq',
 
     entities: [ __dirname + '/**/*.entity{.ts,.js}' ],
